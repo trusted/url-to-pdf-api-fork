@@ -100,14 +100,7 @@ async function render(_opts = {}) {
     logger.error(err.stack);
     throw err;
   } finally {
-    logger.info('Closing browser..');
-    if (!config.DEBUG_MODE) {
-      // listen for "error" event so that the whole app doesn't crash
-      setTimeout(() => {
-        logger.info('closing browser after 3 sec');
-        browser.close();
-      }, 10000);
-    }
+    logger.info('Not? Closing browser..');
   }
 
   return data;
