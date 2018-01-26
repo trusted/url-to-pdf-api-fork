@@ -4,25 +4,28 @@ const config = require('../config');
 const logger = require('../util/logger')(__filename);
 
 async function render(_opts = {}) {
-  const opts = _.merge({
-    cookies: [],
-    scrollPage: false,
-    emulateScreenMedia: true,
-    ignoreHttpsErrors: false,
-    html: null,
-    viewport: {
-      width: 1600,
-      height: 1200,
+  const opts = _.merge(
+    {
+      cookies: [],
+      scrollPage: false,
+      emulateScreenMedia: true,
+      ignoreHttpsErrors: false,
+      html: null,
+      viewport: {
+        width: 1600,
+        height: 1200,
+      },
+      goto: {
+        waitUntil: 'networkidle',
+        networkIdleTimeout: 2000,
+      },
+      pdf: {
+        format: 'A4',
+        printBackground: true,
+      },
     },
-    goto: {
-      waitUntil: 'networkidle',
-      networkIdleTimeout: 2000,
-    },
-    pdf: {
-      format: 'A4',
-      printBackground: true,
-    },
-  }, _opts);
+    _opts
+  );
 
   if (_.get(_opts, 'pdf.width') && _.get(_opts, 'pdf.height')) {
     // pdf.format always overrides width and height, so we must delete it
@@ -99,6 +102,10 @@ async function render(_opts = {}) {
   } finally {
     logger.info('Closing browser..');
     if (!config.DEBUG_MODE) {
+      // listen for "error" event so that the whole app doesn't crash
+      setTimeout(() => {
+        logger.info('closing browser after 3 sec');
+      }, 3000);
       await browser.close();
     }
   }
