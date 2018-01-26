@@ -105,8 +105,8 @@ async function render(_opts = {}) {
       // listen for "error" event so that the whole app doesn't crash
       setTimeout(() => {
         logger.info('closing browser after 3 sec');
-      }, 3000);
-      await browser.close();
+        browser.close();
+      }, 10000);
     }
   }
 
