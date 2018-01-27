@@ -15,10 +15,10 @@ async function render(_opts = {}) {
         width: 1600,
         height: 1200,
       },
-      goto: {
-        waitUntil: 'networkidle',
-        networkIdleTimeout: 2000,
-      },
+      // goto: {
+      //   waitUntil: 'networkidle',
+      //   networkIdleTimeout: 2000,
+      // },
       pdf: {
         format: 'A4',
         printBackground: true,
@@ -100,7 +100,11 @@ async function render(_opts = {}) {
     logger.error(err.stack);
     throw err;
   } finally {
-    logger.info('Not? Closing browser..');
+    logger.info('Closing browser..');
+    if (!config.DEBUG_MODE) {
+      // listen for "error" event so that the whole app doesn't crash
+      await browser.close();
+    }
   }
 
   return data;
