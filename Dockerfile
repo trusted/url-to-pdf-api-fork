@@ -13,14 +13,16 @@ RUN apt update -y \
 RUN groupadd --gid 1000 node \
   && useradd --uid 1000 --gid node --shell /bin/bash --create-home node
 
-USER node
-
 ENV HOME=/home/node
 ARG APP_HOME=/home/node/srv
 WORKDIR $APP_HOME
 
-COPY . ./
-RUN npm install --only=production
+RUN chown -R node:node $APP_HOME
+
+USER node
+
+COPY --chown=1000:1000 . ./
+RUN npm install --omit=dev
 
 EXPOSE $PORT
 CMD [ "node", "." ]
