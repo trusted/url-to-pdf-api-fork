@@ -22,5 +22,5 @@ WORKDIR $APP_HOME
 COPY . ./
 RUN npm install --only=production
 
-EXPOSE 9000
+EXPOSE $PORT
 CMD [ "node", "." ]
