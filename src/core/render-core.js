@@ -3,8 +3,17 @@ const _ = require('lodash');
 const config = require('../config');
 const logger = require('../util/logger')(__filename);
 
+let browserInstance = null;
+let browserCalls = 0;
 
 async function createBrowser(opts) {
+  if (browserInstance) {
+    logger.info('Reusing browser');
+    return browserInstance;
+  }
+
+  logger.info('Creating new browser');
+
   const browserOpts = {
     ignoreHTTPSErrors: opts.ignoreHttpsErrors,
     sloMo: config.DEBUG_MODE ? 250 : undefined,
@@ -21,7 +30,16 @@ async function createBrowser(opts) {
   if (!opts.enableGPU || navigator.userAgent.indexOf('Win') !== -1) {
     browserOpts.args.push('--disable-gpu');
   }
-  return puppeteer.launch(browserOpts);
+  browserInstance = newBrowserInstance(browserOpts);
+
+  return browserInstance;
+}
+
+async function newBrowserInstance(browserOpts) {
+  const browserInst = await puppeteer.launch(browserOpts);
+  browserInst.on('disconnected', async () => { await newBrowserInstance(browserOpts) });
+
+  return browserInst;
 }
 
 async function getFullPageHeight(page) {
@@ -81,6 +99,7 @@ async function render(_opts = {}) {
     logger.error(`Error event emitted: ${err}`);
     logger.error(err.stack);
     browser.close();
+    browserInstance = null;
   });
 
 
@@ -108,7 +127,7 @@ async function render(_opts = {}) {
     await page.setViewport(opts.viewport);
     if (opts.emulateScreenMedia) {
       logger.info('Emulate @media screen..');
-      await page.emulateMedia('screen');
+      await page.emulateMediaType('screen');
     }
 
     if (opts.cookies && opts.cookies.length > 0) {
@@ -128,9 +147,14 @@ async function render(_opts = {}) {
       await page.goto(opts.url, opts.goto);
     }
 
-    if (_.isNumber(opts.waitFor) || _.isString(opts.waitFor)) {
+    if (_.isNumber(opts.waitFor)) {
       logger.info(`Wait for ${opts.waitFor} ..`);
-      await page.waitFor(opts.waitFor);
+      await page.waitForTimeout(opts.waitFor);
+    }
+
+    if (_.isString(opts.waitFor)) {
+      logger.info(`Wait for selector ${opts.waitFor} ..`);
+      await page.waitForSelector(opts.waitFor);
     }
 
     if (opts.scrollPage) {
@@ -169,8 +193,7 @@ async function render(_opts = {}) {
 
     if (opts.output === 'pdf') {
       if (opts.pdf.fullPage) {
-        const height = await getFullPageHeight(page);
-        opts.pdf.height = height;
+        opts.pdf.height = await getFullPageHeight(page);
       }
       data = await page.pdf(opts.pdf);
     } else if (opts.output === 'html') {
@@ -197,9 +220,13 @@ async function render(_opts = {}) {
     logger.error(err.stack);
     throw err;
   } finally {
-    logger.info('Closing browser..');
-    if (!config.DEBUG_MODE) {
+    browserCalls += 1;
+    logger.info(`Current browser calls: ${browserCalls}`);
+
+    if (browserCalls > 50 || config.TEST) {
+      logger.info('Restarting browser!');
       await browser.close();
+      browserInstance = null;
     }
   }
 
@@ -214,7 +241,7 @@ async function scrollPage(page) {
     const bottomThreshold = 400;
 
     function bottomPos() {
-      return window.pageYOffset + window.innerHeight;
+      return window.scrollY + window.innerHeight;
     }
 
     return new Promise((resolve, reject) => {
