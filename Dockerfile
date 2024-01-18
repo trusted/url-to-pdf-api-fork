@@ -19,8 +19,8 @@ ENV HOME=/home/node
 ARG APP_HOME=/home/node/srv
 WORKDIR $APP_HOME
 
-RUN git clone --depth 1 https://github.com/trusted/url-to-pdf-api.git . \
-  && npm install --only=production
+COPY . ./
+RUN npm install --only=production
 
 EXPOSE 9000
 CMD [ "node", "." ]
