@@ -29,3 +29,10 @@ jobs:
         with:
           push: true
           tags: ghcr.io/trusted/url-to-pdf-api:c-${{ github.sha }}
+
+  ship:
+    needs: build-and-publish
+    uses: trusted/shared-workflows/.github/workflows/update_kube_state.yml@main
+    with:
+      repo_name: url-to-pdf-api
+      commit_sha: ${{ github.sha }}
