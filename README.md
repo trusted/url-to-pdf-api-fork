@@ -2,6 +2,10 @@
 
 [![Build Status](https://travis-ci.org/alvarcarto/url-to-pdf-api.svg?branch=master)](https://travis-ci.org/alvarcarto/url-to-pdf-api)
 
+> **NOTE:** This is the forked (and public) copy of the `url-to-pdf-api` repository.
+>
+> The private one is available [here](https://github.com/trusted/url-to-pdf-api).
+
 # URL to PDF Microservice
 
 > Web page PDF rendering done right. Microservice for rendering receipts, invoices, or any content. Packaged to an easy API.
