@@ -5,27 +5,14 @@ on:
     branches: ["master"]
 
 jobs:
-  publish:
-
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56 # v5.0.0
-        with:
-          push: true
-          tags: ghcr.io/trusted/url-to-pdf-api:c-${{ github.sha }}
+  build-and-publish:
+    uses: trusted/shared-workflows/.github/workflows/build_and_push_dockerfile.yml@main
+    with:
+      image_name: url-to-pdf-api
+      
+  ship:
+    needs: build-and-publish
+    uses: trusted/shared-workflows/.github/workflows/update_kube_state.yml@main
+    with:
+      repo_name: url-to-pdf-api
+      commit_sha: ${{ github.sha }}
